@@ -7,3 +7,5 @@ inference
 supervision
 onnx
 torch
+fastapi
+uvicorn
