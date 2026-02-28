@@ -1,5 +1,7 @@
-
+*.idea
 *.venv
 *__pycache__
+
+*/target/*
 
 *.DS_Store
