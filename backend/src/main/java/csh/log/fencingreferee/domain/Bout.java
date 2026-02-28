@@ -2,6 +2,8 @@ package csh.log.fencingreferee.domain;
 
 import java.time.Instant;
 
+import org.springframework.web.bind.annotation.PathVariable;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Id;
@@ -22,13 +24,29 @@ public class Bout {
 
     private Instant createdAt = Instant.now();
 
-    public void setVideoUrl(String videoUrl) {
+    public void setVideoUrl(String videoUrl2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setVideoUrl'");
     }
 
-    public void setStatus(BoutStatus boutStatus) {
+    public void setStatus(BoutStatus pending) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setStatus'");
     }
 
-    public String getVideoUrl() {
+    public Object getVideoUrl() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getVideoUrl'");
+    }
+
+    public Long getId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getId'");
+    }
+
+    public PathVariable getStatus() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getStatus'");
     }
 
     // getters/setters
