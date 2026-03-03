@@ -90,7 +90,7 @@ class ScoreboxDetectorClassifier:
 
             # If confidence is above a threshold, proceed
             if confidence > 0.5:
-                print(f"Detected box with confidence {confidence:.2f}")
+                # print(f"Detected box with confidence {confidence:.2f}")
 
                 # Save the bounding box info
                 this_box = [bbox_xyxy_rescaled, confidence]
@@ -108,7 +108,7 @@ class ScoreboxDetectorClassifier:
 
                 # Classify the cropped region
                 classification = classifier.classify(cropped_img, show_images=debug)
-                print(f"Classification result: {classification}")
+                # print(f"Classification result: {classification}")
         
         return classification, boxes
     

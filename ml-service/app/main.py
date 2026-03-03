@@ -8,7 +8,7 @@ import app.cv2_common as cv2_common
 from app.yolo_scorebox_classifier import ScoreboxDetectorClassifier
 from app.fencer_pose import FencerPoseClassifier
 from app.nn_pose_classifier import SimpleNNClassifier
-from app.data_models import ScoringEvent
+from app.data_models import ScoringEvent, ScoreBoutRequest
 
 
 ### Constants
@@ -172,12 +172,25 @@ def score_bout(input_video: str) -> list[dict]:
     # Load fencer pose model
     fencer_pose_classifier = FencerPoseClassifier(FENCER_POSE_MODEL_PATH)
     # Load pose classifier model
-    pose_classifier = torch.load(POSE_CLASSIFIER_MODEL_PATH, map_location=torch.device('cpu'))
-    pose_classifier.device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    pose_classifier.to(pose_classifier.device)
+    device = (
+            torch.device("mps") if torch.backends.mps.is_available()
+            else torch.device("cuda") if torch.cuda.is_available()
+            else torch.device("cpu")
+        )
+
+    pose_classifier = SimpleNNClassifier(classes=["En-Garde", "Lunge", "Parry", "None"])
+
+    state_dict = torch.load(
+        POSE_CLASSIFIER_MODEL_PATH,
+        map_location=device
+    )
+
+    pose_classifier.load_state_dict(state_dict)
+    pose_classifier.to(device)
+    pose_classifier.eval()
     # Load point decision tree model
     # point_decider = joblib.load(POINT_DECISION_TREE_PATH)
-    events = list[ScoringEvent] = []
+    events : list[ScoringEvent] = []
 
     # Open video stream
     cap = cv2.VideoCapture(input_video)
@@ -199,14 +212,11 @@ def score_bout(input_video: str) -> list[dict]:
         # Note: the current pipeline will attempt to score every frame that there is a light on the scorebox.
         # In the future, either the ml service or backend must filter to avoid duplicate points being scored for the same touch. 
         if scorebox_classification != cv2_common.NO_SIDE:
-            p = POINT_DICT[determine_point(frame, pose_classifier, interim_point_decider, scorebox_classification, fencer_boxes_left, fencer_boxes_right, fencer_keypoints_left, fencer_keypoints_right, left_movement, right_movement)]
-            event = ScoringEvent()
-            event.timestamp_ms = (current_frame * 1000) // fps
-            event.side = p
-            event.confidence = None # once we train a proper point decider, we can return a confidence score here
-            event.model_version = MODEL_VERSION
-            event.ml_payload = {
-                "point": p,
+            side = POINT_DICT[determine_point(frame, pose_classifier, interim_point_decider, scorebox_classification, fencer_boxes_left, fencer_boxes_right, fencer_keypoints_left, fencer_keypoints_right, left_movement, right_movement)]
+            timestamp_ms = (current_frame * 1000) // fps
+            confidence = 0.0 # once we train a proper point decider, we can return a confidence score here
+            ml_payload = {
+                "point": side,
                 "scorebox_classification": scorebox_classification,
                 "fencer_boxes_left": fencer_boxes_left, # this might be a matrix, so either backend will need to unwrap it or ml service will do more pre-processing after testing
                 "fencer_keypoints_left": fencer_keypoints_left,
@@ -215,6 +225,7 @@ def score_bout(input_video: str) -> list[dict]:
                 "left_movement": left_movement,
                 "right_movement": right_movement
             }
+            event = ScoringEvent(timestamp_ms=timestamp_ms, side=side, confidence=confidence, model_version=MODEL_VERSION, ml_payload=ml_payload)
             events.append(event)
         current_frame += 1
     cap.release()
@@ -229,9 +240,22 @@ def score_point(input_video) -> dict:
     # Load fencer pose model
     fencer_pose_classifier = FencerPoseClassifier(FENCER_POSE_MODEL_PATH)
     # Load pose classifier model
-    pose_classifier = torch.load(POSE_CLASSIFIER_MODEL_PATH, map_location=torch.device('cpu'))
-    pose_classifier.device = torch.device("mps") if torch.backends.mps.is_available() else torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-    pose_classifier.to(pose_classifier.device)
+    device = (
+        torch.device("mps") if torch.backends.mps.is_available()
+        else torch.device("cuda") if torch.cuda.is_available()
+        else torch.device("cpu")
+    )
+
+    pose_classifier = SimpleNNClassifier(classes=["En-Garde", "Lunge", "Parry", "None"])
+
+    state_dict = torch.load(
+        POSE_CLASSIFIER_MODEL_PATH,
+        map_location=device
+    )
+
+    pose_classifier.load_state_dict(state_dict)
+    pose_classifier.to(device)
+    pose_classifier.eval()
     # Load point decision tree model
     # point_decider = joblib.load(POINT_DECISION_TREE_PATH)
 
@@ -276,7 +300,7 @@ def read_root():
             "Model Version": MODEL_VERSION}
 
 @app.post("/score-bout")
-def score_bout_api(request):
+def score_bout_api(request: ScoreBoutRequest):
     return score_bout(request.video_url)
 # def score_bout_api(request):
 #     cap = cv2.VideoCapture(request.video_url)

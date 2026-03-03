@@ -42,6 +42,16 @@ def normalize_keypoints_to_bbox(keypoints, bbox):
         
     return normalized_keypoints
 
+def get_data_shape_classes():
+    """
+    Get the shape of the training data.
+    
+    Returns:
+    tuple: The shape of the training data (n_samples, n_features+1).
+    """
+    data, _ = generate_training_data()
+    return data.shape
+
 def generate_training_data():
     """
     Read the pose classification dataset and return the data and classes.

@@ -7,6 +7,9 @@ class ScoringEvent(BaseModel):
     model_version: str
     ml_payload: dict # json with payload from ML model for visualization in frontend
 
+class ScoreBoutRequest(BaseModel):
+    video_url: str
+
 class Bout(BaseModel):
     video_url: str
     status: str
