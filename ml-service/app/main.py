@@ -9,6 +9,8 @@ from cv2.typing import MatLike
 from fencer_pose import FencerPoseClassifier
 from nn_pose_classifier import SimpleNNClassifier
 import torch
+from data_models import ScoringEvent
+import time
 
 
 ### Constants
@@ -28,6 +30,7 @@ POINT_DICT = {
 }
 
 POSES = ["En Garde", "Lunge", "Parry", "None"]
+MODEL_VERSION = "v0.1"
 
 ### Inference Methods
 
@@ -174,11 +177,12 @@ def score_bout(input_video: str) -> list[dict]:
     pose_classifier.to(pose_classifier.device)
     # Load point decision tree model
     # point_decider = joblib.load(POINT_DECISION_TREE_PATH)
-    points = list[dict] = []
+    events = list[ScoringEvent] = []
 
     # Open video stream
     cap = cv2.VideoCapture(input_video)
-
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    current_frame = 1
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -192,22 +196,29 @@ def score_bout(input_video: str) -> list[dict]:
         (fencer_boxes_left, fencer_keypoints_left, fencer_boxes_right, fencer_keypoints_right, 
          left_movement, right_movement) = fencer_pose_classifier.evaluate_on_input(frame)
 
-        # cv2.waitKey(int(1000 / 30))
+        # Note: the current pipeline will attempt to score every frame that there is a light on the scorebox.
+        # In the future, either the ml service or backend must filter to avoid duplicate points being scored for the same touch. 
         if scorebox_classification != cv2_common.NO_SIDE:
             p = POINT_DICT[determine_point(frame, pose_classifier, interim_point_decider, scorebox_classification, fencer_boxes_left, fencer_boxes_right, fencer_keypoints_left, fencer_keypoints_right, left_movement, right_movement)]
-            print(p)
-            points.append({
+            event = ScoringEvent()
+            event.timestamp_ms = (current_frame * 1000) // fps
+            event.side = p
+            event.confidence = None # once we train a proper point decider, we can return a confidence score here
+            event.model_version = MODEL_VERSION
+            event.ml_payload = {
                 "point": p,
                 "scorebox_classification": scorebox_classification,
-                "fencer_boxes_left": fencer_boxes_left,
+                "fencer_boxes_left": fencer_boxes_left, # this might be a matrix, so either backend will need to unwrap it or ml service will do more pre-processing after testing
                 "fencer_keypoints_left": fencer_keypoints_left,
                 "fencer_boxes_right": fencer_boxes_right,
                 "fencer_keypoints_right": fencer_keypoints_right,
                 "left_movement": left_movement,
                 "right_movement": right_movement
-            })
+            }
+            events.append(event)
+        current_frame += 1
     cap.release()
-    return points
+    return events
 
 def score_point(input_video) -> dict:
     """

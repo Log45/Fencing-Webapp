@@ -1,5 +1,6 @@
 package csh.log.fencingreferee.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -28,38 +29,34 @@ public class ScoringEvent {
 
     private String modelVersion;
 
-    @Lob
-    private String rawPayload; // JSON from ML service
-
-    public void setBout(Bout bout2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setBout'");
-    }
-
-    public void setTimestampMs(Object timestampMs2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setTimestampMs'");
-    }
-
-    public void setSide(ScoringSide valueOf) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setSide'");
-    }
-
-    public void setConfidence(Object confidence2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setConfidence'");
-    }
-
-    public void setModelVersion(Object modelVersion2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setModelVersion'");
-    }
-
-    public void setRawPayload(String string) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setRawPayload'");
-    }
+    @Column(columnDefinition = "jsonb")
+    private String mlPayload; // store full ML output
 
     // getters/setters
+
+    public void setBout(Bout bout) {
+        this.bout = bout;
+    }
+
+    public void setTimestampMs(long timestampMs) {
+        this.timestampMs = timestampMs;
+    }
+
+    public void setSide(ScoringSide side) {
+        this.side = side;
+    }
+
+    public void setConfidence(double confidence) {
+        this.confidence=confidence;
+    }
+
+    public void setModelVersion(String modelVersion) {
+        this.modelVersion = modelVersion;
+    }
+
+    public void setRawPayload(String payload) {
+        this.mlPayload = payload;
+    }
+
+
 }
