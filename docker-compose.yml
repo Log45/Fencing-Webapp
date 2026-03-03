@@ -1,0 +1,32 @@
+services:
+  backend:
+    build: ./backend
+    depends_on:
+      - api
+
+  ml-service:
+    build: ./ml-service
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  frontend:
+    build: ./frontend
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: supersecret
+    volumes:
+      - ./minio-data:/data
+    command: server /data --console-address ":9001"
+
+  postgres:
+    image: postgres:18

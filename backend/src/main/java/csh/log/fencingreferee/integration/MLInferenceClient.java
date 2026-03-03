@@ -28,7 +28,7 @@ public class MlInferenceClient {
 
         ResponseEntity<List<ScoringEventRequest>> response =
             restTemplate.exchange(
-                "http://ml-api:8000/score-bout",
+                "http://ml-service:8000/score-bout",
                 HttpMethod.POST,
                 request,
                 new ParameterizedTypeReference<List<ScoringEventRequest>>() {}

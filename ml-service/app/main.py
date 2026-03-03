@@ -83,8 +83,8 @@ def normalize_keypoints_to_bbox(img: MatLike, keypoints: list[tuple], bbox: tupl
 
     for x, y in keypoints:
         # print("Bbox:", x_min, y_min, width, height)
-        x_normalized = ((x/640)-x_min) / width
-        y_normalized = ((y/640)-y_min) / height
+        x_normalized = ((x/imgsize[0])-x_min) / width
+        y_normalized = ((y/imgsize[1])-y_min) / height
         normalized_keypoints.extend([x_normalized, y_normalized])
     
     return normalized_keypoints
@@ -265,24 +265,26 @@ def read_root():
 
 @app.get("/score-bout")
 def score_bout_api(request):
-    cap = cv2.VideoCapture(request.video_url)
+    return score_bout(request.video_url)
+# def score_bout_api(request):
+#     cap = cv2.VideoCapture(request.video_url)
 
-    events = []
+#     events = []
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+#     while cap.isOpened():
+#         ret, frame = cap.read()
+#         if not ret:
+#             break
 
-        event = process_frame(frame, ...)
-        if event:
-            events.append(event)
+#         event = process_frame(frame, ...)
+#         if event:
+#             events.append(event)
 
-    cap.release()
-    return {
-        "events": events,
-        "model_version": "v0.1"
-    }
+#     cap.release()
+#     return {
+#         "events": events,
+#         "model_version": "v0.1"
+#     }
 
 @app.get("/score-point")
 def score_point_api(video_url: str):

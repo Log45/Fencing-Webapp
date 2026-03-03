@@ -34,7 +34,7 @@ public class Bout {
         throw new UnsupportedOperationException("Unimplemented method 'setStatus'");
     }
 
-    public Object getVideoUrl() {
+    public String getVideoUrl() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'getVideoUrl'");
     }
