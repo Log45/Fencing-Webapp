@@ -2,7 +2,7 @@
 # Contributors: Skylar Gallup <cwg7336@rit.edu>
 
 import cv2
-from cv2_common import *
+from app.cv2_common import *
 from cv2.typing import MatLike
 from typing import Sequence
 

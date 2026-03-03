@@ -1,10 +1,10 @@
 import cv2
-import cv2_common
+import app.cv2_common as cv2_common
 import numpy as np
 from cv2.typing import MatLike
 from ultralytics import YOLO
 from ultralytics.engine.results import Boxes
-from scorebox_classifier import ScoreboxThresholdClassifier
+from app.scorebox_classifier import ScoreboxThresholdClassifier
 
 
 class ScoreboxDetectorClassifier:

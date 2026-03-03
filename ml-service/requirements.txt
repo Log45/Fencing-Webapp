@@ -9,3 +9,4 @@ onnx
 torch
 fastapi
 uvicorn
+pydantic

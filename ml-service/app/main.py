@@ -1,19 +1,19 @@
 from fastapi import FastAPI
 import uvicorn
-
 import cv2
-import cv2_common
-from argparse import ArgumentParser, Namespace
-from yolo_scorebox_classifier import ScoreboxDetectorClassifier
 from cv2.typing import MatLike
-from fencer_pose import FencerPoseClassifier
-from nn_pose_classifier import SimpleNNClassifier
 import torch
-from data_models import ScoringEvent
-import time
+
+import app.cv2_common as cv2_common
+from app.yolo_scorebox_classifier import ScoreboxDetectorClassifier
+from app.fencer_pose import FencerPoseClassifier
+from app.nn_pose_classifier import SimpleNNClassifier
+from app.data_models import ScoringEvent
 
 
 ### Constants
+# In a later version, these should be environmental variables 
+# Instead of being included in the container, we will retrieve them from S3 based on model versions.
 SCOREBOX_MODEL_PATH = 'trained_models/scorebox_detect/scorebox_detect.pt'
 FENCER_POSE_MODEL_PATH = 'trained_models/fencer_keypoint/fencer_keypoint.pt'
 POSE_CLASSIFIER_MODEL_PATH = 'trained_models/pose_classifier/pose_classifier.pth'
@@ -272,9 +272,10 @@ app = FastAPI()
 
 @app.get("/")
 def read_root():
-    return {"Hello": "World"}
+    return {"Fencing ML Service": "Welcome to the Fencing ML Service! Use the /score-bout endpoint to score a fencing match.",
+            "Model Version": MODEL_VERSION}
 
-@app.get("/score-bout")
+@app.post("/score-bout")
 def score_bout_api(request):
     return score_bout(request.video_url)
 # def score_bout_api(request):
@@ -297,8 +298,9 @@ def score_bout_api(request):
 #         "model_version": "v0.1"
 #     }
 
-@app.get("/score-point")
+@app.post("/score-point")
 def score_point_api(video_url: str):
+    return {"Not":"Implemented"} # score_point is not implemented with the right output yet, it is mainly there as a stub for future live scoring.
     return score_point(video_url)
 
 if __name__ == "__main__":

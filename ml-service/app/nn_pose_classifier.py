@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 
-from classifier_data import generate_training_data
+from app.classifier_data import generate_training_data
 
 # Define the neural network
 class SimpleNNClassifier(nn.Module):
