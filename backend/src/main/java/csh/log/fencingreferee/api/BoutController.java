@@ -10,6 +10,7 @@ import csh.log.fencingreferee.api.dto.BoutResponse;
 import csh.log.fencingreferee.api.dto.CreateBoutRequest;
 import csh.log.fencingreferee.domain.Bout;
 import csh.log.fencingreferee.service.BoutService;
+import csh.log.fencingreferee.service.VideoStorageService;
 
 @RestController
 @RequestMapping("/api/bouts")
@@ -30,5 +31,12 @@ public class BoutController {
     @PostMapping("/{id}/score")
     public void scoreBout(@PathVariable Long id) {
         boutService.scoreBout(id);
+    }
+
+    @PostMapping("/bouts/upload-url")
+    public VideoStorageService.PresignedUpload createUploadUrl(
+        @RequestParam String filename
+    ) {
+        return videoStorageService.generateUploadUrl(filename);
     }
 }

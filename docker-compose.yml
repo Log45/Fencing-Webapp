@@ -25,8 +25,74 @@ services:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: supersecret
     volumes:
-      - ./minio-data:/data
+      - minio-data:/data
     command: server /data --console-address ":9001"
+
+  minio-init:
+      image: minio/mc
+      depends_on:
+        - minio
+      entrypoint: >
+        /bin/sh -c "
+        sleep 5;
+        mc alias set local http://minio:9000 admin supersecret;
+
+        # Create buckets
+        mc mb -p local/fencing-videos;
+        mc mb -p local/fencing-models;
+
+        # Create backend service user
+        mc admin user add local backend-user backend-secret;
+
+        # Create ML service user
+        mc admin user add local ml-user ml-secret;
+
+        # Create backend policy (full access to both buckets)
+        echo '{
+          \"Version\":\"2012-10-17\",
+          \"Statement\":[
+            {
+              \"Effect\":\"Allow\",
+              \"Action\":[\"s3:*\"],
+              \"Resource\":[
+                \"arn:aws:s3:::fencing-videos\",
+                \"arn:aws:s3:::fencing-videos/*\",
+                \"arn:aws:s3:::fencing-models\",
+                \"arn:aws:s3:::fencing-models/*\"
+              ]
+            }
+          ]
+        }' > /tmp/backend-policy.json;
+
+        mc admin policy create local backend-policy /tmp/backend-policy.json;
+        mc admin policy attach local backend-policy --user backend-user;
+
+        # Create ML read-only policy
+        echo '{
+          \"Version\":\"2012-10-17\",
+          \"Statement\":[
+            {
+              \"Effect\":\"Allow\",
+              \"Action\":[\"s3:GetObject\"],
+              \"Resource\":[\"arn:aws:s3:::fencing-videos/*\"]
+            },
+            {
+              \"Effect\":\"Allow\",
+              \"Action\":[\"s3:GetObject\"],
+              \"Resource\":[\"arn:aws:s3:::fencing-models/*\"]
+            }
+          ]
+        }' > /tmp/ml-policy.json;
+
+        mc admin policy create local ml-policy /tmp/ml-policy.json;
+        mc admin policy attach local ml-policy --user ml-user;
+
+        echo 'MinIO initialization complete.';
+        exit 0;
+        "
 
   postgres:
     image: postgres:18
+
+volumes:
+  minio-data:

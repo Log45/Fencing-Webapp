@@ -17,37 +17,32 @@ public class Bout {
     @GeneratedValue
     private Long id;
 
-    private String videoUrl;
+    private String videoObjectKey;
 
     @Enumerated(EnumType.STRING)
     private BoutStatus status;
 
     private Instant createdAt = Instant.now();
 
-    public void setVideoUrl(String videoUrl2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setVideoUrl'");
+    // getters/setters
+
+    public void setVideoObjectKey(String videoObjectKey) {
+        this.videoObjectKey = videoObjectKey;
     }
 
-    public void setStatus(BoutStatus pending) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setStatus'");
+    public void setStatus(BoutStatus status) {
+        this.status = status;
     }
 
-    public String getVideoUrl() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getVideoUrl'");
+    public String getVideoObjectKey() {
+        return this.videoObjectKey;
     }
 
     public Long getId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getId'");
+        return this.id;
     }
 
     public PathVariable getStatus() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getStatus'");
+        return this.status;
     }
-
-    // getters/setters
 }

@@ -6,3 +6,7 @@
 */target/*
 
 *.DS_Store
+
+*.MOV
+*.mov
+*.mp4

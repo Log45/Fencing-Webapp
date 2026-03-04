@@ -20,14 +20,15 @@ public class ScoringEvent {
     @ManyToOne(fetch = FetchType.LAZY)
     private Bout bout;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private ScoringJob job;
+
     private long timestampMs;
 
     @Enumerated(EnumType.STRING)
     private ScoringSide side;
 
     private double confidence;
-
-    private String modelVersion;
 
     @Column(columnDefinition = "jsonb")
     private String mlPayload; // store full ML output
@@ -36,6 +37,10 @@ public class ScoringEvent {
 
     public void setBout(Bout bout) {
         this.bout = bout;
+    }
+
+    public void setJob(ScoringJob job) {
+        this.job = job;
     }
 
     public void setTimestampMs(long timestampMs) {
@@ -48,10 +53,6 @@ public class ScoringEvent {
 
     public void setConfidence(double confidence) {
         this.confidence=confidence;
-    }
-
-    public void setModelVersion(String modelVersion) {
-        this.modelVersion = modelVersion;
     }
 
     public void setRawPayload(String payload) {

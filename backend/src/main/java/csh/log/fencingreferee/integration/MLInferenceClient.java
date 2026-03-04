@@ -21,17 +21,17 @@ public class MlInferenceClient {
         this.restTemplate = restTemplate;
     }
 
-    public List<ScoringEventRequest> scoreBout(String videoUrl) {
+    public ScoreBoutResponse scoreBout(String videoUrl) {
 
         HttpEntity<Map<String, String>> request =
             new HttpEntity<>(Map.of("video_url", videoUrl));
 
-        ResponseEntity<List<ScoringEventRequest>> response =
+        ResponseEntity<ScoreBoutResponse> response =
             restTemplate.exchange(
                 "http://ml-service:8000/score-bout",
                 HttpMethod.POST,
                 request,
-                new ParameterizedTypeReference<List<ScoringEventRequest>>() {}
+                new ParameterizedTypeReference<ScoreBoutResponse>() {}
             );
 
         return response.getBody();
