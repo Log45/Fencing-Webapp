@@ -6,7 +6,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.GeneratedValue;
 
@@ -18,20 +18,24 @@ public class ScoringEvent {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "bout_id", nullable = false)
     private Bout bout;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "job_id", nullable = false)
     private ScoringJob job;
 
+    @Column(nullable = false)
     private long timestampMs;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private ScoringSide side;
 
     private double confidence;
 
-    @Column(columnDefinition = "jsonb")
-    private String mlPayload; // store full ML output
+    @Column(columnDefinition = "jsonb", nullable = false)
+    private String mlPayload;// store full ML output
 
     // getters/setters
 
@@ -59,5 +63,31 @@ public class ScoringEvent {
         this.mlPayload = payload;
     }
 
+    public Long getId() {
+        return this.id;
+    }
 
+    public Bout getBout() {
+        return this.bout;
+    }
+
+    public ScoringJob getJob() {
+        return this.job;
+    }
+
+    public long getTimestampMs() {
+        return this.timestampMs;
+    }
+
+    public ScoringSide getSide() {
+        return this.side;
+    }
+
+    public double getConfidence() {
+        return this.confidence;
+    }
+
+    public String getMlPayload() {
+        return this.mlPayload;
+    }
 }

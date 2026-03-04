@@ -2,18 +2,50 @@ services:
   backend:
     build: ./backend
     depends_on:
-      - api
+      - postgres
+      - minio
+      - ml-service
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/fencing
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+
+      ML_SERVICE_URL: http://ml-service:8000
+
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: backend-user
+      S3_SECRET_KEY: backend-secret
 
   ml-service:
     build: ./ml-service
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
+    environment:
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY: ml-user
+      S3_SECRET_KEY: ml-secret
+      S3_BUCKET_VIDEOS: fencing-videos
+      S3_BUCKET_MODELS: fencing-models
+    ports:
+      - "8000:8000"
 
   frontend:
     build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      BACKEND_URL: http://backend:8080
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: fencing
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
 
   minio:
     image: minio/minio:latest
@@ -29,70 +61,64 @@ services:
     command: server /data --console-address ":9001"
 
   minio-init:
-      image: minio/mc
-      depends_on:
-        - minio
-      entrypoint: >
-        /bin/sh -c "
-        sleep 5;
-        mc alias set local http://minio:9000 admin supersecret;
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 admin supersecret; do
+        echo 'Waiting for MinIO...';
+        sleep 2;
+      done;
 
-        # Create buckets
-        mc mb -p local/fencing-videos;
-        mc mb -p local/fencing-models;
+      mc mb -p local/fencing-videos;
+      mc mb -p local/fencing-models;
 
-        # Create backend service user
-        mc admin user add local backend-user backend-secret;
+      mc admin user add local backend-user backend-secret;
+      mc admin user add local ml-user ml-secret;
 
-        # Create ML service user
-        mc admin user add local ml-user ml-secret;
+      echo '{
+        \"Version\":\"2012-10-17\",
+        \"Statement\":[
+          {
+            \"Effect\":\"Allow\",
+            \"Action\":[\"s3:*\"],
+            \"Resource\":[
+              \"arn:aws:s3:::fencing-videos\",
+              \"arn:aws:s3:::fencing-videos/*\",
+              \"arn:aws:s3:::fencing-models\",
+              \"arn:aws:s3:::fencing-models/*\"
+            ]
+          }
+        ]
+      }' > /tmp/backend-policy.json;
 
-        # Create backend policy (full access to both buckets)
-        echo '{
-          \"Version\":\"2012-10-17\",
-          \"Statement\":[
-            {
-              \"Effect\":\"Allow\",
-              \"Action\":[\"s3:*\"],
-              \"Resource\":[
-                \"arn:aws:s3:::fencing-videos\",
-                \"arn:aws:s3:::fencing-videos/*\",
-                \"arn:aws:s3:::fencing-models\",
-                \"arn:aws:s3:::fencing-models/*\"
-              ]
-            }
-          ]
-        }' > /tmp/backend-policy.json;
+      mc admin policy create local backend-policy /tmp/backend-policy.json;
+      mc admin policy attach local backend-policy --user backend-user;
 
-        mc admin policy create local backend-policy /tmp/backend-policy.json;
-        mc admin policy attach local backend-policy --user backend-user;
+      echo '{
+        \"Version\":\"2012-10-17\",
+        \"Statement\":[
+          {
+            \"Effect\":\"Allow\",
+            \"Action\":[\"s3:GetObject\"],
+            \"Resource\":[\"arn:aws:s3:::fencing-videos/*\"]
+          },
+          {
+            \"Effect\":\"Allow\",
+            \"Action\":[\"s3:GetObject\"],
+            \"Resource\":[\"arn:aws:s3:::fencing-models/*\"]
+          }
+        ]
+      }' > /tmp/ml-policy.json;
 
-        # Create ML read-only policy
-        echo '{
-          \"Version\":\"2012-10-17\",
-          \"Statement\":[
-            {
-              \"Effect\":\"Allow\",
-              \"Action\":[\"s3:GetObject\"],
-              \"Resource\":[\"arn:aws:s3:::fencing-videos/*\"]
-            },
-            {
-              \"Effect\":\"Allow\",
-              \"Action\":[\"s3:GetObject\"],
-              \"Resource\":[\"arn:aws:s3:::fencing-models/*\"]
-            }
-          ]
-        }' > /tmp/ml-policy.json;
+      mc admin policy create local ml-policy /tmp/ml-policy.json;
+      mc admin policy attach local ml-policy --user ml-user;
 
-        mc admin policy create local ml-policy /tmp/ml-policy.json;
-        mc admin policy attach local ml-policy --user ml-user;
-
-        echo 'MinIO initialization complete.';
-        exit 0;
-        "
-
-  postgres:
-    image: postgres:18
+      echo 'MinIO initialization complete.';
+      exit 0;
+      "
 
 volumes:
   minio-data:
+  postgres-data:

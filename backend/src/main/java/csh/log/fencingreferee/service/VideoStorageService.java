@@ -2,7 +2,6 @@ package csh.log.fencingreferee.service;
 
 import java.net.URL;
 import java.time.Duration;
-import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -20,21 +19,28 @@ public class VideoStorageService {
         this.storageClient = storageClient;
     }
 
-    public PresignedUpload generateUploadUrl(String originalFilename) {
-
-        // Basic business logic
-        String objectKey = "uploads/" + UUID.randomUUID() + "-" + originalFilename;
-
+    public String generateUploadUrl(String objectKey) {
         URL url = storageClient.generatePresignedUploadUrl(
             BUCKET,
             objectKey,
             URL_EXPIRATION
         );
+    
+        return url.toString();
+    }
 
-        return new PresignedUpload(objectKey, url.toString());
+    public String generateDownloadUrl(String objectKey) {
+        URL url = storageClient.generatePresignedDownloadUrl(
+            BUCKET,
+            objectKey,
+            URL_EXPIRATION
+        );
+
+        return url.toString();
     }
 
     public record PresignedUpload(
+        Long boutId,
         String objectKey,
         String uploadUrl
     ) {}

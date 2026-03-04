@@ -8,7 +8,7 @@ class ScoringEvent(BaseModel):
     ml_payload: dict # json with payload from ML model for visualization in frontend
 
 class ScoreBoutRequest(BaseModel):
-    video_url: str
+    video_object_key: str
 
 class Bout(BaseModel):
     video_url: str

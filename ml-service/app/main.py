@@ -302,7 +302,7 @@ def read_root():
 @app.post("/score-bout")
 def score_bout_api(request: ScoreBoutRequest):
     return {"model_version": MODEL_VERSION,
-            "events": score_bout(request.video_url)}
+            "events": score_bout(request.video_object_key)}
 # def score_bout_api(request):
 #     cap = cv2.VideoCapture(request.video_url)
 

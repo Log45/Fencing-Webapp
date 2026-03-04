@@ -5,4 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import csh.log.fencingreferee.domain.ScoringJob;
 
 public interface ScoringJobRepository extends JpaRepository<ScoringJob, Long> {
+
+    List<ScoringJob> findByBoutIdOrderByStartedAtDesc(Long boutId);
+
 }

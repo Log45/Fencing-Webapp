@@ -1,11 +1,13 @@
 package csh.log.fencingreferee.service;
 
-import java.util.List;
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import csh.log.fencingreferee.api.dto.ScoreBoutResponse;
 import csh.log.fencingreferee.api.dto.ScoringEventRequest;
+import csh.log.fencingreferee.api.dto.ScoringEventResponse;
 import csh.log.fencingreferee.domain.Bout;
 import csh.log.fencingreferee.domain.User;
 import csh.log.fencingreferee.domain.JobStatus;
@@ -17,8 +19,7 @@ import csh.log.fencingreferee.integration.MlInferenceClient;
 import csh.log.fencingreferee.persistence.BoutRepository;
 import csh.log.fencingreferee.persistence.ScoringEventRepository;
 import csh.log.fencingreferee.persistence.ScoringJobRepository;
-import csh.log.fencingreferee.service.VideoStorageService;
-import csh.log.fencingreferee.persistence.ScoringJobRepository;
+import csh.log.fencingreferee.service.VideoStorageService.PresignedUpload;
 
 import jakarta.transaction.Transactional;
 
@@ -35,7 +36,7 @@ public class BoutService {
         BoutRepository boutRepo,
         ScoringEventRepository eventRepo,
         MlInferenceClient mlClient,
-        ScoringJobRepo jobRepo,
+        ScoringJobRepository jobRepo,
         VideoStorageService storageService
     ) {
         this.boutRepo = boutRepo;
@@ -73,6 +74,32 @@ public class BoutService {
             bout.getId(),
             objectKey,
             url
+        );
+    }
+
+    public List<ScoringEventResponse> getBoutEvents(Long boutId) {
+        List<ScoringEvent> events =
+            eventRepo.findByBoutIdOrderByTimestampMsAsc(boutId);
+
+        return events.stream()
+            .map(e -> new ScoringEventResponse(
+                e.getTimestampMs(),
+                e.getSide().name(),
+                e.getConfidence()
+            ))
+            .toList();
+    }
+
+    public Bout getBout(Long boutId) {
+        return boutRepo.findById(boutId).orElseThrow();
+    }
+
+    public String getVideoDownloadUrl(Long boutId) {
+
+        Bout bout = boutRepo.findById(boutId).orElseThrow();
+    
+        return storageService.generateDownloadUrl(
+            bout.getVideoObjectKey()
         );
     }
 
