@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 
+# TODO: change data models to match backend exactly instead of using snake case
 class ScoringEvent(BaseModel):
     timestamp_ms: int # milliseconds since the start of the video
     side: str # which side scored the point
