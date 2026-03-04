@@ -3,12 +3,14 @@ import uvicorn
 import cv2
 from cv2.typing import MatLike
 import torch
+import os
 
 import app.cv2_common as cv2_common
 from app.yolo_scorebox_classifier import ScoreboxDetectorClassifier
 from app.fencer_pose import FencerPoseClassifier
 from app.nn_pose_classifier import SimpleNNClassifier
 from app.data_models import ScoringEvent, ScoreBoutRequest
+from app.s3_client import download_video
 
 
 ### Constants
@@ -31,6 +33,12 @@ POINT_DICT = {
 
 POSES = ["En Garde", "Lunge", "Parry", "None"]
 MODEL_VERSION = "v0.1"
+
+# S3 env vars
+S3_BUCKET_VIDEOS = os.getenv("S3_BUCKET_VIDEOS", "fencing-videos")
+S3_BUCKET_MODELS = os.getenv("S3_BUCKET_MODELS", "fencing-models")
+
+
 
 ### Inference Methods
 
@@ -301,8 +309,12 @@ def read_root():
 
 @app.post("/score-bout")
 def score_bout_api(request: ScoreBoutRequest):
+    local_video = f"/tmp/video.{request.video_object_key.split(".")[-1]}"
+    download_video(S3_BUCKET_VIDEOS, request.video_object_key, local_video)
+    events = score_bout(local_video)
+    os.remove(local_video) # delete the video from the ML service after inference
     return {"model_version": MODEL_VERSION,
-            "events": score_bout(request.video_object_key)}
+            "events": events}
 # def score_bout_api(request):
 #     cap = cv2.VideoCapture(request.video_url)
 

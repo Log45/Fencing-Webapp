@@ -40,7 +40,3 @@ public class S3Config {
             .build();
     }
 }
-
-curl -X PUT \                                                                     
--T "/Users/log/Documents/code/Fencing-Webapp/videos/princeton-1.MOV" \
-"http://localhost:9000/fencing-videos/users/1/bouts/1/princeton-1.MOV?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260304T071823Z&X-Amz-SignedHeaders=host&X-Amz-Credential=backend-user%2F20260304%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=900&X-Amz-Signature=cc11dd9b6edea05eebe4f48885d217cc0cb52a61e0938944c66e83c563a55be5"
