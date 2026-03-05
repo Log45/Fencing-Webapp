@@ -10,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import csh.log.fencingreferee.api.dto.ScoreBoutResponse;
-import csh.log.fencingreferee.api.dto.ScoringEventRequest;
 import csh.log.fencingreferee.api.dto.ScoringEventResponse;
 import csh.log.fencingreferee.domain.Bout;
 import csh.log.fencingreferee.domain.User;

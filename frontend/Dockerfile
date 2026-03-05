@@ -1,14 +1,31 @@
-# Use a lightweight base image
-FROM alpine:latest
+# -------------------------------
+# Stage 1: Build
+# -------------------------------
+FROM node:24-alpine AS builder
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# (Optional) Copy local files to the container
-# COPY . .
+COPY package*.json ./
+RUN npm install
 
-# (Optional) Run commands (e.g., install dependencies)
-# RUN apk add --no-cache bash
+COPY . .
+RUN npm run build
 
-# Define the command to run when the container starts
-CMD ["/bin/sh"]
+# -------------------------------
+# Stage 2: Runtime
+# -------------------------------
+FROM node:24-alpine
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app/package*.json ./
+RUN npm install --omit=dev
+
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start"]

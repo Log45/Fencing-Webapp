@@ -45,6 +45,7 @@ public class BoutController {
         return boutService.createUploadUrl(user, filename);
     }
 
+
     @GetMapping("/{id}")
     public BoutResponse getBout(@PathVariable Long id) {
         Bout bout = boutService.getBout(id);
