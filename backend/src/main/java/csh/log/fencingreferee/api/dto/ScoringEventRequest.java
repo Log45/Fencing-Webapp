@@ -1,11 +1,12 @@
 package csh.log.fencingreferee.api.dto;
 
+import java.util.Map;
+
 public record ScoringEventRequest(
     long timestampMs,
     String side,
     double confidence,
-    String modelVersion,
-    Object payload
+    Map<String, Object> mlPayload
 ) {
 
 }

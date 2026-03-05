@@ -2,8 +2,12 @@ package csh.log.fencingreferee.service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import csh.log.fencingreferee.api.dto.ScoreBoutResponse;
 import csh.log.fencingreferee.api.dto.ScoringEventRequest;
@@ -31,6 +35,7 @@ public class BoutService {
     private final ScoringJobRepository jobRepo;
     private final MlInferenceClient mlClient;
     private final VideoStorageService storageService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public BoutService(
         BoutRepository boutRepo,
@@ -82,12 +87,24 @@ public class BoutService {
             eventRepo.findByBoutIdOrderByTimestampMsAsc(boutId);
 
         return events.stream()
-            .map(e -> new ScoringEventResponse(
-                e.getTimestampMs(),
-                e.getSide().name(),
-                e.getConfidence()
-            ))
-            .toList();
+            .map(e -> {
+                try {
+                    Map<String, Object> payloadMap = objectMapper.readValue(
+                        e.getMlPayload(),
+                        new TypeReference<Map<String, Object>>() {}
+                    );
+
+                    return new ScoringEventResponse(
+                        e.getTimestampMs(),
+                        e.getSide().name(),
+                        e.getConfidence(),
+                        payloadMap
+                    );
+                } catch (Exception ex) {
+                    throw new RuntimeException(ex);
+                }
+            })
+            .collect(Collectors.toList());
     }
 
     public Bout getBout(Long boutId) {
@@ -114,13 +131,16 @@ public class BoutService {
         job.setStatus(JobStatus.PROCESSING);
         jobRepo.save(job);
 
+        System.out.println("Scoring Bout");
+
         try {
             ScoreBoutResponse response =
                 mlClient.scoreBout(bout.getVideoObjectKey());
-
             job.setModelVersion(response.modelVersion());
+            System.out.println(response.toString());
 
-            for (ScoringEventRequest e : response.events()) {
+            for (ScoringEventResponse e : response.events()) {
+                System.out.println(e.toString());
 
                 ScoringEvent event = new ScoringEvent();
                 event.setBout(bout);
@@ -128,8 +148,12 @@ public class BoutService {
                 event.setTimestampMs(e.timestampMs());
                 event.setSide(ScoringSide.valueOf(e.side()));
                 event.setConfidence(e.confidence());
-                event.setRawPayload(e.payload().toString());
-            
+                try {
+                    event.setRawPayload(objectMapper.writeValueAsString(e.mlPayload()));
+                } catch (Exception jsonEx) {
+                    throw new RuntimeException(jsonEx);
+                }
+                
                 eventRepo.save(event);
             }
 
@@ -138,11 +162,11 @@ public class BoutService {
             bout.setStatus(BoutStatus.COMPLETED);
 
         } catch (Exception ex) {
-
+            System.out.println("Scoring failed");
+            ex.printStackTrace();
             job.setStatus(JobStatus.FAILED);
             job.setErrorMessage(ex.getMessage());
             job.setFinishedAt(Instant.now());
-
             bout.setStatus(BoutStatus.FAILED); // might want to throw an exception in the future
         }
     }

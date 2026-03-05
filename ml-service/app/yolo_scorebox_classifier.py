@@ -6,6 +6,9 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Boxes
 from app.scorebox_classifier import ScoreboxThresholdClassifier
 
+import logging
+logging.getLogger('ultralytics').setLevel(logging.WARNING)
+
 
 class ScoreboxDetectorClassifier:
     _detector: YOLO

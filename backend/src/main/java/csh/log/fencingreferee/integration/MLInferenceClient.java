@@ -33,6 +33,7 @@ public class MlInferenceClient {
                 new ParameterizedTypeReference<ScoreBoutResponse>() {}
             );
 
+        System.out.println(response.toString());
         return response.getBody();
     }
 }

@@ -4,5 +4,5 @@ import java.util.List;
 
 public record ScoreBoutResponse(
     String modelVersion,
-    List<ScoringEventRequest> events
+    List<ScoringEventResponse> events
 ) {}

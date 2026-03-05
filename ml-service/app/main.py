@@ -26,9 +26,9 @@ POINT_LEFT = 1
 POINT_RIGHT = 2
 
 POINT_DICT = {
-    NO_POINT: "No Point",
-    POINT_LEFT: "Left Fencer",
-    POINT_RIGHT: "Right Fencer"
+    NO_POINT: "NONE",
+    POINT_LEFT: "LEFT",
+    POINT_RIGHT: "RIGHT"
 }
 
 POSES = ["En Garde", "Lunge", "Parry", "None"]
@@ -115,7 +115,7 @@ def determine_point(frame, pose_classifier: SimpleNNClassifier, point_decider, s
         left_pose_probs = pose_classifier.predict_probs(torch.as_tensor(left_keypoints, device=pose_classifier.device).unsqueeze(0))
         right_pose_probs = pose_classifier.predict_probs(torch.as_tensor(right_keypoints, device=pose_classifier.device).unsqueeze(0))
         
-        print("Left Pose Max: ", torch.max(left_pose_probs).item(), "Left Prediction: ", POSES[torch.argmax(left_pose_probs)],"\tRight Pose Max: ", torch.max(right_pose_probs).item(), "Right Prediction: ", POSES[torch.argmax(right_pose_probs)])
+        # print("Left Pose Max: ", torch.max(left_pose_probs).item(), "Left Prediction: ", POSES[torch.argmax(left_pose_probs)],"\tRight Pose Max: ", torch.max(right_pose_probs).item(), "Right Prediction: ", POSES[torch.argmax(right_pose_probs)])
         
         if torch.max(left_pose_probs) > 0.45 and torch.max(right_pose_probs) > 0.45:
             # Only make a decision if the model is confident
@@ -169,7 +169,7 @@ def process_frame(
         }
     }
 
-def score_bout(input_video: str) -> list[dict]:
+def score_bout(input_video: str) -> list[ScoringEvent]:
     """
     Scoring function that can take in either a video file or a live stream to score an entire fencing match.
 
@@ -233,8 +233,10 @@ def score_bout(input_video: str) -> list[dict]:
                 "left_movement": left_movement,
                 "right_movement": right_movement
             }
-            event = ScoringEvent(timestamp_ms=timestamp_ms, side=side, confidence=confidence, model_version=MODEL_VERSION, ml_payload=ml_payload)
+            event = ScoringEvent(timestampMs=timestamp_ms, side=side, confidence=confidence, mlPayload=ml_payload)
             events.append(event)
+            # print("Is payload null? ", event.mlPayload == None)
+            # print(event)
         current_frame += 1
     cap.release()
     return events
@@ -291,12 +293,14 @@ def score_point(input_video) -> dict:
             return {
                 "point": p,
                 "scorebox_classification": scorebox_classification,
-                "fencer_boxes_left": fencer_boxes_left,
-                "fencer_keypoints_left": fencer_keypoints_left,
-                "fencer_boxes_right": fencer_boxes_right,
-                "fencer_keypoints_right": fencer_keypoints_right,
+                "fencer_boxes_left": fencer_boxes_left[0],
+                "fencer_keypoints_left": fencer_keypoints_left[0],
+                "fencer_boxes_right": fencer_boxes_right[0],
+                "fencer_keypoints_right": fencer_keypoints_right[0],
                 "left_movement": left_movement,
-                "right_movement": right_movement
+                "right_movement": right_movement,
+                "left_confidence": fencer_boxes_left[1],
+                "right_confidence": fencer_boxes_right[1]
             }
 
 ### API Methods
@@ -311,9 +315,9 @@ def read_root():
 def score_bout_api(request: ScoreBoutRequest):
     local_video = f"/tmp/video.{request.video_object_key.split(".")[-1]}"
     download_video(S3_BUCKET_VIDEOS, request.video_object_key, local_video)
-    events = score_bout(local_video)
+    events: list[ScoringEvent] = score_bout(local_video)
     os.remove(local_video) # delete the video from the ML service after inference
-    return {"model_version": MODEL_VERSION,
+    return {"modelVersion": MODEL_VERSION,
             "events": events}
 # def score_bout_api(request):
 #     cap = cv2.VideoCapture(request.video_url)

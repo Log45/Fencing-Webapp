@@ -2,6 +2,10 @@ from ultralytics import YOLO
 import torch
 import cv2
 import numpy as np
+import logging
+
+logging.getLogger('ultralytics').setLevel(logging.WARNING)
+
 
 class FencerPoseClassifier:
     def __init__(self, model_path=None):
