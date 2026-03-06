@@ -4,19 +4,21 @@ import { forwardRef } from "react";
 
 type Props = {
   src: string;
+  className?: string;
 };
 
-const VideoPlayer = forwardRef<HTMLVideoElement, Props>(({ src }, ref) => {
-  return (
-    <video
-      ref={ref}
-      src={src}
-      controls
-      width={800}
-      style={{ maxWidth: "100%" }}
-    />
-  );
-});
+const VideoPlayer = forwardRef<HTMLVideoElement, Props>(
+  ({ src, className }, ref) => {
+    return (
+      <video
+        ref={ref}
+        src={src}
+        controls
+        className={className ?? "w-full rounded-lg shadow-xl"}
+      />
+    );
+  }
+);
 
 VideoPlayer.displayName = "VideoPlayer";
 

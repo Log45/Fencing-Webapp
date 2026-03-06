@@ -56,37 +56,43 @@ export default function BoutPage() {
 
   if (bout.status !== "COMPLETED") {
     return (
-      <div>
-        <h1>Bout {id}</h1>
-        <p>Processing video...</p>
-        <p>Status: {bout.status}</p>
-      </div>
+      <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100">
+        <div className="max-w-xl w-full px-6 py-10 rounded-2xl bg-slate-900/70 shadow-2xl border border-slate-800 text-center">
+          <h1 className="text-2xl font-semibold mb-3">Bout {id}</h1>
+          <p className="mb-1">Processing video...</p>
+          <p className="text-sm text-slate-300">Status: {bout.status}</p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div>
-      <h1>Bout {id}</h1>
+    <main className="min-h-screen flex items-center justify-center bg-slate-950 text-slate-100 px-4">
+      <div className="w-full max-w-5xl">
+        <div className="mb-6 text-center">
+          <h1 className="text-2xl font-semibold">Bout {id}</h1>
+        </div>
 
-      {videoUrl && (
-        <VideoPlayer
-          ref={videoRef}
-          src={videoUrl}
-        />
-      )}
+        <div className="flex flex-col items-center">
+          <div className="w-full max-w-3xl">
+            {videoUrl && (
+              <VideoPlayer
+                ref={videoRef}
+                src={videoUrl}
+                className="w-full max-w-3xl rounded-lg shadow-xl mx-auto"
+              />
+            )}
 
-      <Timeline
-        events={events.map((e) => ({
-          timestamp: e.timestampMs / 1000,
-          side: e.side
-        }))}
-        duration={duration}
-        onSeek={(t: number) => {
-          if (videoRef.current) {
-            videoRef.current.currentTime = t;
-          }
-        }}
-      />
-    </div>
+            <Timeline
+              events={events.map((e) => ({
+                timestamp: e.timestampMs / 1000,
+                side: e.side
+              }))}
+              duration={duration}
+            />
+          </div>
+        </div>
+      </div>
+    </main>
   );
 }
