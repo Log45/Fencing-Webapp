@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 
 export default function UploadVideo() {
   const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
   async function handleUpload() {
-    if (!file) return;
+    if (!file || isUploading) return;
   
     try {
+      setIsUploading(true);
       const { uploadUrl, boutId } = await getUploadUrl(file.name);
   
       const uploadRes = await fetch(uploadUrl, {
@@ -32,6 +34,8 @@ export default function UploadVideo() {
     } catch (err) {
       console.error(err);
       alert("Upload failed");
+    } finally {
+      setIsUploading(false);
     }
   }
 
@@ -59,10 +63,10 @@ export default function UploadVideo() {
       <div className="flex justify-center">
         <button
           onClick={handleUpload}
-          disabled={!file}
+          disabled={!file || isUploading}
           className="inline-flex items-center justify-center px-6 py-2.5 rounded-full text-sm font-medium bg-emerald-500 text-slate-950 hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-lg shadow-emerald-500/20"
         >
-          Start Scoring
+          {isUploading ? "Uploading..." : "Start Scoring"}
         </button>
       </div>
     </div>
