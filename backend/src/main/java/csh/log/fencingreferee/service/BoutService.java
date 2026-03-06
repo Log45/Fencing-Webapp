@@ -120,7 +120,7 @@ public class BoutService {
     }
 
     @Transactional
-    public void scoreBout(Long boutId) {
+    public ScoringJob enqueueScoreBout(Long boutId) {
         Bout bout = boutRepo.findById(boutId).orElseThrow();
         bout.setStatus(BoutStatus.PROCESSING);
 
@@ -128,9 +128,15 @@ public class BoutService {
         job.setBout(bout);
         job.setStartedAt(Instant.now());
         job.setStatus(JobStatus.PROCESSING);
-        jobRepo.save(job);
+        return jobRepo.save(job);
+    }
 
-        System.out.println("Scoring Bout");
+    @org.springframework.scheduling.annotation.Async
+    public void processScoreBout(Long boutId, Long jobId) {
+        Bout bout = boutRepo.findById(boutId).orElseThrow();
+        ScoringJob job = jobRepo.findById(jobId).orElseThrow();
+
+        System.out.println("Scoring Bout asynchronously");
 
         try {
             ScoreBoutResponse response =
@@ -152,7 +158,7 @@ public class BoutService {
                 } catch (Exception jsonEx) {
                     throw new RuntimeException(jsonEx);
                 }
-                
+
                 eventRepo.save(event);
             }
 
@@ -166,7 +172,11 @@ public class BoutService {
             job.setStatus(JobStatus.FAILED);
             job.setErrorMessage(ex.getMessage());
             job.setFinishedAt(Instant.now());
-            bout.setStatus(BoutStatus.FAILED); // might want to throw an exception in the future
+            bout.setStatus(BoutStatus.FAILED);
         }
+
+        // flush changes
+        jobRepo.save(job);
+        boutRepo.save(bout);
     }
 }

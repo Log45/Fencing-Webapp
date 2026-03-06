@@ -33,7 +33,8 @@ public class BoutController {
     @PostMapping("/{id}/score")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void scoreBout(@PathVariable Long id) {
-        boutService.scoreBout(id);
+        var job = boutService.enqueueScoreBout(id);
+        boutService.processScoreBout(id, job.getId());
     }
 
     @PostMapping("/upload-url")
