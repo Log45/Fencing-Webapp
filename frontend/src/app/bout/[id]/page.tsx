@@ -33,7 +33,7 @@ export default function BoutPage() {
         const video = await getVideoUrl(id);
         setVideoUrl(video.url);
       }
-    }, 2000);
+    }, 10000);
 
     return () => clearInterval(interval);
   }, [id]);
